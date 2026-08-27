@@ -1,0 +1,24 @@
+import { Router } from "express";
+import {
+  getPatients,
+  createPatient,
+  getMyPatient,
+} from "../controllers/patientController.js";
+import { authenticate } from "../middleware/authMiddleware.js";
+import { authorizeRoles } from "../middleware/roleMiddleware.js";
+
+const router = Router();
+
+router.use(authenticate);
+
+router.get("/me", authorizeRoles("PATIENT"), getMyPatient);
+
+router.get(
+  "/",
+  authorizeRoles("ADMIN", "DOCTOR", "NURSE", "PATIENT"),
+  getPatients,
+);
+
+router.post("/", authorizeRoles("ADMIN"), createPatient);
+
+export default router;

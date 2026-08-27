@@ -1,56 +1,170 @@
-# Welcome to your Expo app 👋
+# AssistDoc Mobile — Complete Client Migration
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This project is a React Native / Expo migration of the existing AssistDoc `client` application. The existing Express + Prisma + PostgreSQL `server` remains the single backend.
 
-## Get started
+## Target
 
-1. Install dependencies
+- Expo SDK 57
+- Expo 57.0.16 patch line
+- React Native 0.86.2
+- React 19.2.3
+- Expo Router 57.0.16
+- TypeScript 6.0.x
 
-   ```bash
-   npm install
-   ```
+## What is included
 
-2. Start the app
+All web-client role areas are represented in the mobile workspace:
 
-   ```bash
-   npx expo start
-   ```
+### Admin
+- Dashboard
+- Patients
+- Registration
+- Queue
+- Invoices & Payments
+- Reports
+- User Management
+- Settings
 
-In the output, you'll find options to open the app in a
+### Doctor
+- Dashboard
+- Patient Queue
+- Patient Info
+- Consultation
+- Diagnosis
+- Prescriptions
+- Medical Notes
+- Schedule
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Nurse
+- Dashboard
+- Patient Queue
+- Patient Search
+- Patient Info & Vitals
+- Initial Assessment
+- Record Vitals
+- Notes & Tasks
+- Schedule
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Pharmacist
+- Dashboard
+- Prescription Queue
+- Medicine Inventory
+- Prescription Detail
+- Stock Management
+- Notifications
+- Reports & Analytics
+- Schedule
 
-## Get a fresh project
+### Patient
+- Dashboard
+- My Queue
+- Visit History
+- Invoices
+- Schedule
 
-When you're ready, run:
+The mobile screens use the same API routes as the existing client, rather than creating a second backend.
 
-```bash
-npm run reset-project
+## Install
+
+```powershell
+cd mobile
+npm install --legacy-peer-deps
+npx expo install --check
+npm run typecheck
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## API configuration
 
-### Other setup steps
+For the current development laptop IP:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```env
+EXPO_PUBLIC_API_URL=http://192.168.1.9:3000/api
+```
 
-## Learn more
+If the PC IP changes, run:
 
-To learn more about developing your project with Expo, look at the following resources:
+```powershell
+ipconfig
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+and update `mobile/.env`.
 
-## Join the community
+For Android emulator use:
 
-Join our community of developers creating universal apps.
+```env
+EXPO_PUBLIC_API_URL=http://10.0.2.2:3000/api
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Backend for a physical phone
+
+Apply `server_mobile_patch/server.ts` to the existing server. It changes Express from localhost-only binding to `0.0.0.0`.
+
+Start backend:
+
+```powershell
+cd server
+npm run dev
+```
+
+Start mobile:
+
+```powershell
+cd mobile
+npx expo start -c
+```
+
+Phone and PC must be on the same Wi-Fi.
+
+## First test
+
+Open the mobile Login screen and tap **Test server connection**.
+
+The expected result is:
+
+```text
+Server terhubung
+API: ok
+Database: connected
+```
+
+Only after this succeeds should you test login.
+
+## Demo accounts from the supplied seed
+
+```text
+admin@assistdoc.com       Admin12345
+ doctor@assistdoc.com     Admin12345
+nurse@assistdoc.com       Admin12345
+pharmacist@assistdoc.com  Admin12345
+patient@assistdoc.com     Admin12345
+```
+
+## Functional flow
+
+```text
+Admin Registration
+      ↓
+Patient + Visit
+      ↓
+WAITING queue
+      ↓
+Nurse Assessment / Vitals
+      ↓
+IN_CONSULTATION
+      ↓
+Doctor Consultation
+      ↓
+Diagnosis + Prescription
+      ↓
+Pharmacist READY
+      ↓
+Invoice
+      ↓
+Admin Payment
+      ↓
+PAID
+```
+
+## Important
+
+Do not run `npm audit fix --force` while setting up the Expo project. It can move packages outside the Expo SDK 57 compatibility set.
