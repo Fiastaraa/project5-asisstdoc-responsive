@@ -41,7 +41,7 @@ app.use("/api/invoices", clinicRoutes);
 app.use((_req, res) =>
   res.status(404).json({ success: false, message: "Endpoint not found" }),
 );
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 3001;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`AssistDoc API running on port ${PORT}`);
 });
