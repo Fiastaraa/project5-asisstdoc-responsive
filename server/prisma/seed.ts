@@ -52,25 +52,46 @@ async function main() {
   console.log("  ✓ users");
 
   // -------------------------
+  // POLI
+  // -------------------------
+  async function poli(name: string, code: string) {
+    const existing = await prisma.poli.findFirst({ where: { code } });
+    if (existing) {
+      return prisma.poli.update({
+        where: { id: existing.id },
+        data: { name, code },
+      });
+    }
+    return prisma.poli.create({ data: { name, code } });
+  }
+
+  const poliUmum = await poli("Poli Umum", "UMU");
+  const poliObgyn = await poli("Poli Obgyn", "OBG");
+  const poliAnak = await poli("Poli Anak", "ANK");
+  const poliGigi = await poli("Poli Gigi", "GIG");
+
+  console.log("  ✓ polis");
+
+  // -------------------------
   // DOCTORS
   // -------------------------
-  async function doctor(name: string, specialization: string, userId?: number) {
+  async function doctor(name: string, specialization: string, poliId: number, userId?: number) {
     const existing = await prisma.doctor.findFirst({ where: { name } });
     if (existing) {
       return prisma.doctor.update({
         where: { id: existing.id },
-        data: { specialization, ...(userId ? { userId } : {}) },
+        data: { specialization, poliId, ...(userId ? { userId } : {}) },
       });
     }
 
     return prisma.doctor.create({
-      data: { name, specialization, ...(userId ? { userId } : {}) },
+      data: { name, specialization, poliId, ...(userId ? { userId } : {}) },
     });
   }
 
-  const doctor1 = await doctor("Dr. Andi", "General Practitioner", doctorUser.id);
-  const doctor2 = await doctor("Dr. Budi", "Internal Medicine");
-  const doctor3 = await doctor("Dr. Sarah", "General Practitioner");
+  const doctor1 = await doctor("Dr. Andi", "General Practitioner", poliUmum.id, doctorUser.id);
+  const doctor2 = await doctor("Dr. Budi", "Obstetrics & Gynecology", poliObgyn.id);
+  const doctor3 = await doctor("Dr. Sarah", "Pediatrics", poliAnak.id);
 
   console.log("  ✓ doctors");
 
@@ -79,6 +100,8 @@ async function main() {
   // -------------------------
   async function patient(data: {
     name: string;
+    nik?: string;
+    birthDate?: Date;
     gender: string;
     age: number;
     phone: string;
@@ -101,6 +124,8 @@ async function main() {
 
   const patient1 = await patient({
     name: "Budi Santoso",
+    nik: "3171012304950001",
+    birthDate: new Date("1995-04-23"),
     gender: "Male",
     age: 28,
     phone: "081200000001",
@@ -110,6 +135,8 @@ async function main() {
 
   const patient2 = await patient({
     name: "Siti Aisyah",
+    nik: "3171015508920002",
+    birthDate: new Date("1992-08-15"),
     gender: "Female",
     age: 31,
     phone: "081200000002",
@@ -118,6 +145,8 @@ async function main() {
 
   const patient3 = await patient({
     name: "John Doe",
+    nik: "3171011210880003",
+    birthDate: new Date("1988-10-12"),
     gender: "Male",
     age: 35,
     phone: "081200000003",
@@ -126,6 +155,8 @@ async function main() {
 
   const patient4 = await patient({
     name: "Ahmad Rizky",
+    nik: "3171011406810004",
+    birthDate: new Date("1981-06-14"),
     gender: "Male",
     age: 42,
     phone: "081200000004",
@@ -134,6 +165,8 @@ async function main() {
 
   const patient5 = await patient({
     name: "Marina Putri",
+    nik: "3171014101970005",
+    birthDate: new Date("1997-01-01"),
     gender: "Female",
     age: 26,
     phone: "081200000005",
@@ -176,10 +209,12 @@ async function main() {
 
   async function visit(
     p: { id: number },
-    d: { id: number },
+    d: { id: number; poliId?: number | null },
     hour: number,
     minute: number,
-    status: "WAITING" | "IN_CONSULTATION" | "COMPLETED" | "PAID",
+    status: "WAITING" | "CALLED" | "IN_CONSULTATION" | "COMPLETED" | "PAID",
+    queueNumber: string,
+    estimatedWaitMinutes: number
   ) {
     const visitDate = new Date(today);
     visitDate.setHours(hour, minute, 0, 0);
@@ -199,6 +234,9 @@ async function main() {
         data: {
           visitDate,
           status,
+          poliId: d.poliId,
+          queueNumber,
+          estimatedWaitMinutes,
           complaint: "Keluhan awal pasien",
         },
       });
@@ -208,6 +246,9 @@ async function main() {
       data: {
         patientId: p.id,
         doctorId: d.id,
+        poliId: d.poliId,
+        queueNumber,
+        estimatedWaitMinutes,
         visitDate,
         status,
         complaint: "Keluhan awal pasien",
@@ -215,13 +256,42 @@ async function main() {
     });
   }
 
-  const visit1 = await visit(patient1, doctor1, 8, 30, "WAITING");
-  await visit(patient2, doctor1, 8, 45, "WAITING");
-  const visit3 = await visit(patient3, doctor2, 9, 0, "IN_CONSULTATION");
-  const visit4 = await visit(patient4, doctor3, 9, 15, "COMPLETED");
-  await visit(patient5, doctor3, 9, 30, "WAITING");
+  const visit1 = await visit(patient1, doctor1, 8, 30, "WAITING", "A023", 15);
+  await visit(patient2, doctor1, 8, 45, "CALLED", "A024", 5);
+  const visit3 = await visit(patient3, doctor2, 9, 0, "IN_CONSULTATION", "B005", 0);
+  const visit4 = await visit(patient4, doctor3, 9, 15, "COMPLETED", "C010", 0);
+  await visit(patient5, doctor3, 9, 30, "WAITING", "C011", 20);
 
   console.log("  ✓ visits / queue");
+
+  // -------------------------
+  // REMINDERS
+  // -------------------------
+  async function reminder(patientId: number, type: "KONTROL" | "VAKSINASI" | "CEK_LAB", title: string, daysAhead: number, notes?: string) {
+    const targetDate = new Date(today);
+    targetDate.setDate(targetDate.getDate() + daysAhead);
+
+    const existing = await prisma.reminder.findFirst({
+      where: { patientId, title },
+    });
+
+    if (existing) {
+      return prisma.reminder.update({
+        where: { id: existing.id },
+        data: { type, title, date: targetDate, notes },
+      });
+    }
+
+    return prisma.reminder.create({
+      data: { patientId, type, title, date: targetDate, notes },
+    });
+  }
+
+  await reminder(patient1.id, "KONTROL", "Jadwal Kontrol Penginat", 7, "Kontrol rutin tekanan darah");
+  await reminder(patient1.id, "VAKSINASI", "Vaksinasi Influenza", 14, "Dosis tahunan");
+  await reminder(patient1.id, "CEK_LAB", "Cek Lab Hematologi", 21, "Pemeriksaan darah lengkap");
+
+  console.log("  ✓ reminders");
 
   // -------------------------
   // VITALS + DIAGNOSIS

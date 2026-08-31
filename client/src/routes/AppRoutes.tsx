@@ -37,6 +37,7 @@ import Notifications from "../pages/pharmacist/Notifications";
 import PharmacyReports from "../pages/pharmacist/Reports";
 import PharmacySchedule from "../pages/pharmacist/Schedule";
 import PatientDashboard from "../pages/patient/PatientDashboard";
+import PatientRegistration from "../pages/patient/Registration";
 import PatientQueue from "../pages/patient/Queue";
 import PatientHistory from "../pages/patient/History";
 import PatientInvoices from "../pages/patient/Invoices";
@@ -175,6 +176,10 @@ export default function AppRoutes() {
           }
         >
           <Route path="/dashboard/patient" element={<PatientDashboard />} />
+          <Route
+            path="/dashboard/patient/registration"
+            element={<PatientRegistration />}
+          />
           <Route path="/dashboard/patient/queue" element={<PatientQueue />} />
           <Route
             path="/dashboard/patient/history"

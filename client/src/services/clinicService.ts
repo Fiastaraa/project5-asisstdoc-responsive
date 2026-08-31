@@ -28,7 +28,13 @@ export const clinic = {
     (await api.get(`/invoices/reports?range=${range}`)).data,
   users: async () => (await api.get("/users")).data,
   payInvoice: async (id: number) =>
-  (await api.patch(`/invoices/${id}/pay`)).data,
+    (await api.patch(`/invoices/${id}/pay`)).data,
+  polis: async () => (await api.get("/polis")).data,
+  createPoli: async (data: any) => (await api.post("/polis", data)).data,
+  reminders: async () => (await api.get("/reminders")).data,
+  createReminder: async (data: any) => (await api.post("/reminders", data)).data,
+  updateReminderStatus: async (id: number, status: string) =>
+    (await api.patch(`/reminders/${id}`, { status })).data,
 };
 export function unwrap<T = any>(response: any): T {
   return response?.data ?? response;

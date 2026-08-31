@@ -12,6 +12,7 @@ BEGIN;
 -- ------------------------------------------------------------
 -- RESET
 -- ------------------------------------------------------------
+DROP TABLE IF EXISTS "Reminder" CASCADE;
 DROP TABLE IF EXISTS "Payment" CASCADE;
 DROP TABLE IF EXISTS "Invoice" CASCADE;
 DROP TABLE IF EXISTS "Prescription" CASCADE;
@@ -20,8 +21,11 @@ DROP TABLE IF EXISTS "Visit" CASCADE;
 DROP TABLE IF EXISTS "Medicine" CASCADE;
 DROP TABLE IF EXISTS "Doctor" CASCADE;
 DROP TABLE IF EXISTS "Patient" CASCADE;
+DROP TABLE IF EXISTS "Poli" CASCADE;
 DROP TABLE IF EXISTS "User" CASCADE;
 
+DROP TYPE IF EXISTS "ReminderStatus" CASCADE;
+DROP TYPE IF EXISTS "ReminderType" CASCADE;
 DROP TYPE IF EXISTS "PaymentMethod" CASCADE;
 DROP TYPE IF EXISTS "PrescriptionStatus" CASCADE;
 DROP TYPE IF EXISTS "InvoiceStatus" CASCADE;
@@ -41,6 +45,7 @@ CREATE TYPE "UserRole" AS ENUM (
 
 CREATE TYPE "VisitStatus" AS ENUM (
   'WAITING',
+  'CALLED',
   'IN_CONSULTATION',
   'COMPLETED',
   'PAID'
@@ -62,6 +67,18 @@ CREATE TYPE "PrescriptionStatus" AS ENUM (
   'READY'
 );
 
+CREATE TYPE "ReminderType" AS ENUM (
+  'KONTROL',
+  'VAKSINASI',
+  'CEK_LAB'
+);
+
+CREATE TYPE "ReminderStatus" AS ENUM (
+  'PENDING',
+  'SENT',
+  'COMPLETED'
+);
+
 -- ------------------------------------------------------------
 -- USERS
 -- ------------------------------------------------------------
@@ -76,21 +93,42 @@ CREATE TABLE "User" (
 );
 
 -- ------------------------------------------------------------
+-- POLI
+-- ------------------------------------------------------------
+CREATE TABLE "Poli" (
+  "id" SERIAL PRIMARY KEY,
+  "name" TEXT NOT NULL UNIQUE,
+  "code" TEXT NOT NULL UNIQUE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX "Poli_name_idx" ON "Poli"("name");
+
+-- ------------------------------------------------------------
 -- PATIENTS
 -- ------------------------------------------------------------
 CREATE TABLE "Patient" (
   "id" SERIAL PRIMARY KEY,
   "name" TEXT NOT NULL,
+  "nik" TEXT UNIQUE,
+  "birthDate" TIMESTAMP(3),
   "gender" TEXT NOT NULL,
   "age" INTEGER NOT NULL CHECK ("age" >= 0),
   "phone" TEXT NOT NULL,
   "address" TEXT NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "userId" INTEGER UNIQUE,
+  CONSTRAINT "Patient_userId_fkey"
+    FOREIGN KEY ("userId") REFERENCES "User"("id")
+    ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE INDEX "Patient_name_idx" ON "Patient"("name");
 CREATE INDEX "Patient_phone_idx" ON "Patient"("phone");
+CREATE INDEX "Patient_nik_idx" ON "Patient"("nik");
+CREATE INDEX "Patient_userId_idx" ON "Patient"("userId");
 
 -- ------------------------------------------------------------
 -- DOCTORS
@@ -99,11 +137,20 @@ CREATE TABLE "Doctor" (
   "id" SERIAL PRIMARY KEY,
   "name" TEXT NOT NULL,
   "specialization" TEXT NOT NULL,
+  "poliId" INTEGER,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "userId" INTEGER UNIQUE,
+  CONSTRAINT "Doctor_poliId_fkey"
+    FOREIGN KEY ("poliId") REFERENCES "Poli"("id")
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT "Doctor_userId_fkey"
+    FOREIGN KEY ("userId") REFERENCES "User"("id")
+    ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE INDEX "Doctor_name_idx" ON "Doctor"("name");
+CREATE INDEX "Doctor_userId_idx" ON "Doctor"("userId");
 
 -- ------------------------------------------------------------
 -- VISITS / QUEUE / VITALS
@@ -112,6 +159,9 @@ CREATE TABLE "Visit" (
   "id" SERIAL PRIMARY KEY,
   "patientId" INTEGER NOT NULL,
   "doctorId" INTEGER NOT NULL,
+  "poliId" INTEGER,
+  "queueNumber" TEXT,
+  "estimatedWaitMinutes" INTEGER,
   "visitDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "status" "VisitStatus" NOT NULL DEFAULT 'WAITING',
   "complaint" TEXT,
@@ -127,13 +177,38 @@ CREATE TABLE "Visit" (
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT "Visit_doctorId_fkey"
     FOREIGN KEY ("doctorId") REFERENCES "Doctor"("id")
-    ON DELETE RESTRICT ON UPDATE CASCADE
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "Visit_poliId_fkey"
+    FOREIGN KEY ("poliId") REFERENCES "Poli"("id")
+    ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE INDEX "Visit_visitDate_idx" ON "Visit"("visitDate");
 CREATE INDEX "Visit_status_idx" ON "Visit"("status");
 CREATE INDEX "Visit_patientId_idx" ON "Visit"("patientId");
 CREATE INDEX "Visit_doctorId_idx" ON "Visit"("doctorId");
+CREATE INDEX "Visit_poliId_idx" ON "Visit"("poliId");
+
+-- ------------------------------------------------------------
+-- REMINDERS
+-- ------------------------------------------------------------
+CREATE TABLE "Reminder" (
+  "id" SERIAL PRIMARY KEY,
+  "patientId" INTEGER NOT NULL,
+  "type" "ReminderType" NOT NULL DEFAULT 'KONTROL',
+  "title" TEXT NOT NULL,
+  "date" TIMESTAMP(3) NOT NULL,
+  "notes" TEXT,
+  "status" "ReminderStatus" NOT NULL DEFAULT 'PENDING',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Reminder_patientId_fkey"
+    FOREIGN KEY ("patientId") REFERENCES "Patient"("id")
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX "Reminder_patientId_idx" ON "Reminder"("patientId");
+CREATE INDEX "Reminder_date_idx" ON "Reminder"("date");
 
 -- ------------------------------------------------------------
 -- DIAGNOSES
@@ -244,22 +319,31 @@ INSERT INTO "User" ("name", "email", "password", "role") VALUES
 ('Patient Demo', 'patient@assistdoc.com', crypt('Admin12345', gen_salt('bf', 10)), 'PATIENT');
 
 -- ------------------------------------------------------------
+-- DEMO POLI
+-- ------------------------------------------------------------
+INSERT INTO "Poli" ("name", "code") VALUES
+('Poli Umum', 'UMU'),
+('Poli Obgyn', 'OBG'),
+('Poli Anak', 'ANK'),
+('Poli Gigi', 'GIG');
+
+-- ------------------------------------------------------------
 -- DEMO DOCTORS
 -- ------------------------------------------------------------
-INSERT INTO "Doctor" ("name", "specialization") VALUES
-('Dr. Andi', 'General Practitioner'),
-('Dr. Budi', 'Internal Medicine'),
-('Dr. Sarah', 'General Practitioner');
+INSERT INTO "Doctor" ("name", "specialization", "poliId", "userId") VALUES
+('Dr. Andi', 'General Practitioner', 1, 2),
+('Dr. Budi', 'Obstetrics & Gynecology', 2, NULL),
+('Dr. Sarah', 'Pediatrics', 3, NULL);
 
 -- ------------------------------------------------------------
 -- DEMO PATIENTS
 -- ------------------------------------------------------------
-INSERT INTO "Patient" ("name", "gender", "age", "phone", "address") VALUES
-('Budi Santoso', 'Male', 28, '081200000001', 'Jl. Merdeka No. 123'),
-('Siti Aisyah', 'Female', 31, '081200000002', 'Jl. Sudirman No. 20'),
-('John Doe', 'Male', 35, '081200000003', 'Jl. Gatot Subroto No. 10'),
-('Ahmad Rizky', 'Male', 42, '081200000004', 'Jl. Kemang No. 5'),
-('Marina Putri', 'Female', 26, '081200000005', 'Jl. Melati No. 8');
+INSERT INTO "Patient" ("name", "nik", "birthDate", "gender", "age", "phone", "address", "userId") VALUES
+('Budi Santoso', '3171012304950001', '1995-04-23', 'Male', 28, '081200000001', 'Jl. Merdeka No. 123', NULL),
+('Siti Aisyah', '3171015508920002', '1992-08-15', 'Female', 31, '081200000002', 'Jl. Sudirman No. 20', 5),
+('John Doe', '3171011210880003', '1988-10-12', 'Male', 35, '081200000003', 'Jl. Gatot Subroto No. 10', NULL),
+('Ahmad Rizky', '3171011406810004', '1981-06-14', 'Male', 42, '081200000004', 'Jl. Kemang No. 5', NULL),
+('Marina Putri', '3171014101970005', '1997-01-01', 'Female', 26, '081200000005', 'Jl. Melati No. 8', NULL);
 
 -- ------------------------------------------------------------
 -- DEMO MEDICINES

@@ -17,6 +17,7 @@ enum UserRole {
 
 enum VisitStatus {
   WAITING
+  CALLED
   IN_CONSULTATION
   COMPLETED
   PAID
@@ -38,6 +39,18 @@ enum PrescriptionStatus {
   READY
 }
 
+enum ReminderType {
+  KONTROL
+  VAKSINASI
+  CEK_LAB
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  COMPLETED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   name      String
@@ -51,39 +64,58 @@ model User {
   doctor  Doctor?
 }
 
-model Patient {
+model Poli {
   id        Int      @id @default(autoincrement())
+  name      String   @unique
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctors Doctor[]
+  visits  Visit[]
+}
+
+model Patient {
+  id        Int       @id @default(autoincrement())
   name      String
+  nik       String?   @unique
+  birthDate DateTime?
   gender    String
   age       Int
   phone     String
   address   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  userId Int? @unique
-  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-  visits Visit[]
+  userId    Int?       @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  visits    Visit[]
+  reminders Reminder[]
 }
 
 model Doctor {
   id             Int      @id @default(autoincrement())
   name           String
   specialization String
+  poliId         Int?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  userId Int? @unique
-  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  poli   Poli?   @relation(fields: [poliId], references: [id], onDelete: SetNull)
+  userId Int?    @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   visits Visit[]
 }
 
 model Visit {
-  id        Int         @id @default(autoincrement())
-  patientId Int
-  doctorId  Int
-  visitDate DateTime    @default(now())
-  status    VisitStatus @default(WAITING)
+  id                   Int         @id @default(autoincrement())
+  patientId            Int
+  doctorId             Int
+  poliId               Int?
+  queueNumber          String?
+  estimatedWaitMinutes Int?
+  visitDate            DateTime    @default(now())
+  status               VisitStatus @default(WAITING)
 
   complaint     String?
   bloodPressure String?
@@ -97,6 +129,7 @@ model Visit {
 
   patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor        Doctor         @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  poli          Poli?          @relation(fields: [poliId], references: [id], onDelete: SetNull)
   diagnoses     Diagnosis[]
   prescriptions Prescription[]
   invoice       Invoice?
@@ -105,6 +138,7 @@ model Visit {
   @@index([status])
   @@index([patientId])
   @@index([doctorId])
+  @@index([poliId])
 }
 
 model Diagnosis {
@@ -175,4 +209,21 @@ model Payment {
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+}
+
+model Reminder {
+  id        Int            @id @default(autoincrement())
+  patientId Int
+  type      ReminderType   @default(KONTROL)
+  title     String
+  date      DateTime
+  notes     String?
+  status    ReminderStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([date])
 }

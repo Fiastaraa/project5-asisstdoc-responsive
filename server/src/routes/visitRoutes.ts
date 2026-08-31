@@ -27,7 +27,11 @@ router.get(
   getVisitById,
 );
 
-router.post("/", authorizeRoles("ADMIN"), createVisit);
+router.post(
+  "/",
+  authorizeRoles("ADMIN", "NURSE", "PATIENT"),
+  createVisit,
+);
 
 router.patch(
   "/:id/status",

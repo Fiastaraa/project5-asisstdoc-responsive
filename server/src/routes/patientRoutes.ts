@@ -19,6 +19,10 @@ router.get(
   getPatients,
 );
 
-router.post("/", authorizeRoles("ADMIN"), createPatient);
+router.post(
+  "/",
+  authorizeRoles("ADMIN", "NURSE", "PATIENT"),
+  createPatient,
+);
 
 export default router;

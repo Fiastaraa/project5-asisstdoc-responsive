@@ -14,10 +14,22 @@ router.use(authenticate);
 
 router.get("/reports", authorizeRoles("ADMIN"), getReports);
 
-router.post("/", authorizeRoles("ADMIN"), createInvoice);
+router.post(
+  "/",
+  authorizeRoles("ADMIN", "NURSE", "PHARMACIST", "DOCTOR"),
+  createInvoice,
+);
 
-router.get("/:id", authorizeRoles("ADMIN", "PATIENT"), getInvoiceById);
+router.get(
+  "/:id",
+  authorizeRoles("ADMIN", "DOCTOR", "NURSE", "PHARMACIST", "PATIENT"),
+  getInvoiceById,
+);
 
-router.patch("/:id/pay", authorizeRoles("ADMIN"), payInvoice);
+router.patch(
+  "/:id/pay",
+  authorizeRoles("ADMIN", "NURSE", "PHARMACIST"),
+  payInvoice,
+);
 
 export default router;

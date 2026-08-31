@@ -4,6 +4,8 @@ import { z } from "zod";
 
 const patientSchema = z.object({
   name: z.string().min(2),
+  nik: z.string().optional(),
+  birthDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
   gender: z.string().min(1),
   age: z.coerce.number().int().min(0).max(150),
   phone: z.string().min(5),
@@ -19,6 +21,7 @@ export async function getPatients(req: Request, res: Response) {
             OR: [
               { name: { contains: search, mode: "insensitive" } },
               { phone: { contains: search } },
+              { nik: { contains: search } },
             ],
           }
         : undefined,
@@ -67,14 +70,33 @@ export async function createPatient(req: Request, res: Response) {
 export async function getMyPatient(req: any, res: Response) {
   try {
     const userId = req.user?.userId;
-    const patient = await prisma.patient.findUnique({ where: { userId } });
-    if (!patient)
+    let patient = await prisma.patient.findUnique({ where: { userId } });
+
+    if (!patient && userId) {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (user) {
+        patient = await prisma.patient.create({
+          data: {
+            name: user.name,
+            gender: "Female",
+            age: 25,
+            phone: "0812" + Math.floor(10000000 + Math.random() * 90000000),
+            address: "Alamat Pasien Terdaftar",
+            userId: user.id,
+          },
+        });
+      }
+    }
+
+    if (!patient) {
       return res
         .status(404)
         .json({
           success: false,
           message: "Patient profile not linked to this account",
         });
+    }
+
     return res.json({ success: true, data: patient });
   } catch (error) {
     console.error(error);

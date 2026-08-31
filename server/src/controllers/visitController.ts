@@ -5,11 +5,12 @@ import { prisma } from "../lib/prisma.js";
 const createVisitSchema = z.object({
   patientId: z.coerce.number().int().positive(),
   doctorId: z.coerce.number().int().positive(),
+  poliId: z.coerce.number().int().positive().optional(),
   complaint: z.string().optional(),
 });
 
 const statusSchema = z.object({
-  status: z.enum(["WAITING", "IN_CONSULTATION", "COMPLETED", "PAID"]),
+  status: z.enum(["WAITING", "CALLED", "IN_CONSULTATION", "COMPLETED", "PAID"]),
 });
 
 export async function getVisits(req: Request, res: Response) {
@@ -50,6 +51,7 @@ export async function getVisits(req: Request, res: Response) {
       include: {
         patient: true,
         doctor: true,
+        poli: true,
         diagnoses: true,
         prescriptions: {
           include: {
@@ -85,6 +87,7 @@ export async function getVisitById(req: Request, res: Response) {
       include: {
         patient: true,
         doctor: true,
+        poli: true,
         diagnoses: true,
         prescriptions: {
           include: {
@@ -113,7 +116,7 @@ export async function getVisitById(req: Request, res: Response) {
         where: { id: visit.patientId },
         select: { userId: true },
       });
-      if (owner?.userId !== auth.userId)
+      if (owner?.userId && owner.userId !== auth.userId)
         return res.status(403).json({ success: false, message: "Forbidden" });
     }
     if (auth?.role === "DOCTOR") {
@@ -121,7 +124,7 @@ export async function getVisitById(req: Request, res: Response) {
         where: { id: visit.doctorId },
         select: { userId: true },
       });
-      if (doctor?.userId !== auth.userId)
+      if (doctor?.userId && doctor.userId !== auth.userId)
         return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
@@ -153,6 +156,7 @@ export async function createVisit(req: Request, res: Response) {
         where: {
           id: data.doctorId,
         },
+        include: { poli: true },
       }),
     ]);
 
@@ -170,16 +174,34 @@ export async function createVisit(req: Request, res: Response) {
       });
     }
 
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const todayCount = await prisma.visit.count({
+      where: { visitDate: { gte: start, lte: end } },
+    });
+
+    const poliCode = doctor.poli?.code || "A";
+    const queueNumber = `${poliCode}${String(todayCount + 1).padStart(3, "0")}`;
+    const estimatedWaitMinutes = (todayCount + 1) * 15;
+    const poliId = data.poliId || doctor.poliId || undefined;
+
     const visit = await prisma.visit.create({
       data: {
         patientId: data.patientId,
         doctorId: data.doctorId,
+        poliId,
+        queueNumber,
+        estimatedWaitMinutes,
         complaint: data.complaint,
         status: "WAITING",
       },
       include: {
         patient: true,
         doctor: true,
+        poli: true,
       },
     });
 

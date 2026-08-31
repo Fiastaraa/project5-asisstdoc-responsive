@@ -39,13 +39,13 @@ const configs: Record<UserRole, RoleConfig> = {
     short: "Admin",
     items: createItems([
       ["Dashboard", "/dashboard/admin", LayoutDashboard],
-      ["Patients", "/dashboard/admin/patients", Users],
-      ["Registration", "/dashboard/admin/registration", UserPlus],
-      ["Queue", "/dashboard/admin/queue", Clock3],
-      ["Invoices & Payments", "/dashboard/admin/invoices", Receipt],
-      ["Reports", "/dashboard/admin/reports", BarChart3],
-      ["User Management", "/dashboard/admin/users", UserRound],
-      ["Settings", "/dashboard/admin/settings", Settings],
+      ["Data Pasien", "/dashboard/admin/patients", Users],
+      ["Check-in Antrean Poli", "/dashboard/admin/registration", UserPlus],
+      ["Antrean Digital", "/dashboard/admin/queue", Clock3],
+      ["Invoice & Pembayaran", "/dashboard/admin/invoices", Receipt],
+      ["Laporan & Analitik", "/dashboard/admin/reports", BarChart3],
+      ["Kelola User", "/dashboard/admin/users", UserRound],
+      ["Pengaturan", "/dashboard/admin/settings", Settings],
     ]),
   },
   DOCTOR: {
@@ -95,6 +95,7 @@ const configs: Record<UserRole, RoleConfig> = {
     short: "Patient",
     items: createItems([
       ["Dashboard", "/dashboard/patient", LayoutDashboard],
+      ["Online Registration", "/dashboard/patient/registration", UserPlus],
       ["My Queue", "/dashboard/patient/queue", Clock3],
       ["Visit History", "/dashboard/patient/history", FileText],
       ["Invoices", "/dashboard/patient/invoices", Receipt],
