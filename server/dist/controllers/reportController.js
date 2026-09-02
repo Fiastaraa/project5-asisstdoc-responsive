@@ -38,9 +38,7 @@ export async function getReports(req, res) {
         const revenue = invoices.reduce((sum, invoice) => sum + Number(invoice.total), 0);
         const grouped = {};
         for (const visit of visits) {
-            const key = visit.visitDate
-                .toISOString()
-                .slice(0, 10);
+            const key = visit.visitDate.toISOString().slice(0, 10);
             if (!grouped[key]) {
                 grouped[key] = {
                     visits: 0,
@@ -50,9 +48,7 @@ export async function getReports(req, res) {
             grouped[key].visits += 1;
         }
         for (const invoice of invoices) {
-            const key = invoice.createdAt
-                .toISOString()
-                .slice(0, 10);
+            const key = invoice.createdAt.toISOString().slice(0, 10);
             if (!grouped[key]) {
                 grouped[key] = {
                     visits: 0,

@@ -14,7 +14,16 @@ export const clinic = {
   vitals: async (id: number, data: any) =>
     (await api.patch(`/visits/${id}/vitals`, data)).data,
   diagnosis: async (data: any) => (await api.post("/diagnoses", data)).data,
-  medicines: async () => (await api.get("/medicines")).data,
+  medicines: async (search = "") =>
+    (await api.get(`/medicines${search ? `?search=${encodeURIComponent(search)}` : ""}`)).data,
+  createMedicine: async (data: any) =>
+    (await api.post("/medicines", data)).data,
+  updateMedicine: async (id: number, data: any) =>
+    (await api.patch(`/medicines/${id}`, data)).data,
+  adjustMedicineStock: async (id: number, adjustment: number) =>
+    (await api.patch(`/medicines/${id}/stock`, { adjustment })).data,
+  deleteMedicine: async (id: number) =>
+    (await api.delete(`/medicines/${id}`)).data,
   prescription: async (data: any) =>
     (await api.post("/prescriptions", data)).data,
   prescriptionStatus: async (id: number, status: string) =>
@@ -27,8 +36,8 @@ export const clinic = {
   reports: async (range = "weekly") =>
     (await api.get(`/invoices/reports?range=${range}`)).data,
   users: async () => (await api.get("/users")).data,
-  payInvoice: async (id: number) =>
-    (await api.patch(`/invoices/${id}/pay`)).data,
+  payInvoice: async (id: number, method = "CASH") =>
+    (await api.patch(`/invoices/${id}/pay`, { method })).data,
   polis: async () => (await api.get("/polis")).data,
   createPoli: async (data: any) => (await api.post("/polis", data)).data,
   reminders: async () => (await api.get("/reminders")).data,

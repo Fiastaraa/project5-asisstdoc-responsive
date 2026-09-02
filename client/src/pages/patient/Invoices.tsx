@@ -1,6 +1,7 @@
 import PageHeader from "../../components/common/PageHeader";
 import { useEffect, useState } from "react";
 import { clinic, unwrap } from "../../services/clinicService";
+import { paymentService } from "../../services/paymentService";
 import { downloadInvoicePdf } from "../../utils/invoicePdf";
 import { Receipt, Download, CreditCard, CheckCircle2, AlertCircle } from "lucide-react";
 import Badge from "../../components/common/Badge";
@@ -18,9 +19,10 @@ export default function PatientInvoices() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<"ALL" | "UNPAID" | "PAID">("ALL");
   const [payingInvoice, setPayingInvoice] = useState<any | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<string>("E_WALLET");
+  const [paymentMethod, setPaymentMethod] = useState<string>("MIDTRANS");
   const [msg, setMsg] = useState("");
   const [processing, setProcessing] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
@@ -50,12 +52,36 @@ export default function PatientInvoices() {
     setProcessing(true);
     setMsg("");
     try {
-      await clinic.pay(payingInvoice.invoice.id, paymentMethod);
-      setMsg("Pembayaran berhasil diproses! Status tagihan diperbarui menjadi LUNAS.");
-      setPayingInvoice(null);
-      load();
+      if (paymentMethod === "MIDTRANS") {
+        await paymentService.payWithSnap(payingInvoice.invoice.id, {
+          onSuccess: (result) => {
+            console.log("Midtrans Success:", result);
+            setMsg("Pembayaran berhasil diselesaikan via Midtrans!");
+            setPayingInvoice(null);
+            load();
+          },
+          onPending: (result) => {
+            console.log("Midtrans Pending:", result);
+            setMsg("Menunggu penyelesaian pembayaran Midtrans. Silakan selesaikan pembayaran Anda.");
+            setPayingInvoice(null);
+            load();
+          },
+          onError: (err) => {
+            console.error("Midtrans Error:", err);
+            setMsg("Pembayaran Midtrans gagal atau dibatalkan.");
+          },
+          onClose: () => {
+            setProcessing(false);
+          },
+        });
+      } else {
+        await clinic.pay(payingInvoice.invoice.id, paymentMethod);
+        setMsg("Pembayaran berhasil diproses! Status tagihan diperbarui menjadi LUNAS.");
+        setPayingInvoice(null);
+        load();
+      }
     } catch (err: any) {
-      setMsg(err?.response?.data?.message || "Pembayaran gagal, silakan coba lagi.");
+      setMsg(err?.response?.data?.message || err?.message || "Pembayaran gagal, silakan coba lagi.");
     } finally {
       setProcessing(false);
     }
@@ -235,17 +261,22 @@ export default function PatientInvoices() {
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold"
+                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-[#101a3d] focus:border-[#168c9b] focus:outline-none"
                 >
-                  <option value="E_WALLET">E-Wallet (QRIS / GoPay / OVO)</option>
-                  <option value="TRANSFER">Transfer Bank (BCA / Mandiri / BNI)</option>
+                  <option value="MIDTRANS">🌟 Midtrans Gateway (QRIS / GoPay / VA Bank / Kartu Kredit)</option>
+                  <option value="E_WALLET">E-Wallet Manual (QRIS / OVO)</option>
+                  <option value="TRANSFER">Transfer Bank Manual</option>
                   <option value="CASH">Tunai (Bayar di Kasir Klinik)</option>
                 </select>
               </div>
 
-              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800 flex items-start gap-2">
-                <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                <span>Simulasi e-payment instant. Klik konfirmasi untuk menyelesaikan transaksi invoice ini.</span>
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-xs text-emerald-900 flex items-start gap-2">
+                <AlertCircle size={16} className="shrink-0 mt-0.5 text-[#168c9b]" />
+                <span>
+                  {paymentMethod === "MIDTRANS"
+                    ? "Popup pembayaran Midtrans Snap akan terbuka otomatis setelah klik Konfirmasi. Mendukung QRIS, GoPay, ShopeePay, Virtual Account semua bank, & Kartu Kredit."
+                    : "Simulasi pembayaran langsung. Klik konfirmasi untuk menyelesaikan transaksi invoice ini."}
+                </span>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">

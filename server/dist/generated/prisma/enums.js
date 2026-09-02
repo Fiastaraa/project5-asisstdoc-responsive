@@ -16,6 +16,7 @@ export const UserRole = {
 };
 export const VisitStatus = {
     WAITING: 'WAITING',
+    CALLED: 'CALLED',
     IN_CONSULTATION: 'IN_CONSULTATION',
     COMPLETED: 'COMPLETED',
     PAID: 'PAID'
@@ -32,4 +33,14 @@ export const PaymentMethod = {
 export const PrescriptionStatus = {
     PENDING: 'PENDING',
     READY: 'READY'
+};
+export const ReminderType = {
+    KONTROL: 'KONTROL',
+    VAKSINASI: 'VAKSINASI',
+    CEK_LAB: 'CEK_LAB'
+};
+export const ReminderStatus = {
+    PENDING: 'PENDING',
+    SENT: 'SENT',
+    COMPLETED: 'COMPLETED'
 };

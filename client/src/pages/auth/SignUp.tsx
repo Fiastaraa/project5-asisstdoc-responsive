@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../layouts/AuthLayout";
 import { register } from "../../services/authService";
 import type { UserRole } from "../../types/auth";
-import { UserCheck, ShieldCheck } from "lucide-react";
+import { UserCheck } from "lucide-react";
 
 const roles: [UserRole, string][] = [
   ["PATIENT", "Pasien (Client Pasien)"],

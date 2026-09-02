@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import { clinic, unwrap } from "../../services/clinicService";
-import { CheckCircle2, UserPlus, Building2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 export default function RegistrationPage() {
   const [patients, setPatients] = useState<any[]>([]);

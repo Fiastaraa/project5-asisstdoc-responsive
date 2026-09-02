@@ -92,10 +92,8 @@ export async function updatePrescriptionStatus(req, res) {
                 message: "Prescription not found",
             });
         }
-        if (status === "READY" &&
-            prescription.status !== "READY") {
-            if (prescription.medicine.stock <
-                prescription.quantity) {
+        if (status === "READY" && prescription.status !== "READY") {
+            if (prescription.medicine.stock < prescription.quantity) {
                 return res.status(400).json({
                     success: false,
                     message: "Insufficient medicine stock",
@@ -122,10 +120,18 @@ export async function updatePrescriptionStatus(req, res) {
                 });
                 return result;
             });
-            const pending = await prisma.prescription.count({ where: { visitId: prescription.visitId, status: "PENDING" } });
+            const pending = await prisma.prescription.count({
+                where: { visitId: prescription.visitId, status: "PENDING" },
+            });
             let invoice = null;
             if (pending === 0) {
-                const fullVisit = await prisma.visit.findUnique({ where: { id: prescription.visitId }, include: { prescriptions: { include: { medicine: true } }, invoice: true } });
+                const fullVisit = await prisma.visit.findUnique({
+                    where: { id: prescription.visitId },
+                    include: {
+                        prescriptions: { include: { medicine: true } },
+                        invoice: true,
+                    },
+                });
                 if (fullVisit && !fullVisit.invoice) {
                     const consultationFee = Number(process.env.CONSULTATION_FEE ?? 30000);
                     const adminFee = Number(process.env.ADMIN_FEE ?? 5000);
@@ -133,10 +139,28 @@ export async function updatePrescriptionStatus(req, res) {
                     const medicineTotal = fullVisit.prescriptions.reduce((sum, item) => sum + Number(item.medicine.price) * item.quantity, 0);
                     const subtotal = consultationFee + adminFee + medicineTotal;
                     const tax = subtotal * taxRate;
-                    invoice = await prisma.invoice.create({ data: { visitId: prescription.visitId, consultationFee, medicineTotal, adminFee, tax, subtotal, total: subtotal + tax, status: "UNPAID" } });
+                    invoice = await prisma.invoice.create({
+                        data: {
+                            visitId: prescription.visitId,
+                            consultationFee,
+                            medicineTotal,
+                            adminFee,
+                            tax,
+                            subtotal,
+                            total: subtotal + tax,
+                            status: "UNPAID",
+                        },
+                    });
                 }
             }
-            return res.json({ success: true, message: invoice ? "Medicine ready and invoice generated" : "Medicine marked as ready", data: updated, invoice });
+            return res.json({
+                success: true,
+                message: invoice
+                    ? "Medicine ready and invoice generated"
+                    : "Medicine marked as ready",
+                data: updated,
+                invoice,
+            });
         }
         const updated = await prisma.prescription.update({
             where: { id },

@@ -6,5 +6,5 @@ const router = Router();
 router.use(authenticate);
 router.get("/me", authorizeRoles("PATIENT"), getMyPatient);
 router.get("/", authorizeRoles("ADMIN", "DOCTOR", "NURSE", "PATIENT"), getPatients);
-router.post("/", authorizeRoles("ADMIN"), createPatient);
+router.post("/", authorizeRoles("ADMIN", "NURSE", "PATIENT"), createPatient);
 export default router;

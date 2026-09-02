@@ -6,6 +6,7 @@ import SignUp from "../pages/auth/SignUp";
 import RoleLayout from "../layouts/RoleLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import PatientsPage from "../pages/admin/PatientsPage";
+import PatientDetailPage from "../pages/admin/PatientDetailPage";
 import RegistrationPage from "../pages/admin/RegistrationPage";
 import AdminQueue from "../pages/admin/QueuePage";
 import InvoicesPage from "../pages/admin/InvoicesPage";
@@ -16,7 +17,6 @@ import DoctorDashboard from "../pages/doctor/DoctorDashboard";
 import DoctorQueue from "../pages/doctor/DoctorQueue";
 import DoctorPatients from "../pages/doctor/Patients";
 import Consultation from "../pages/doctor/Consultation";
-import Diagnosis from "../pages/doctor/Diagnosis";
 import Prescriptions from "../pages/doctor/Prescriptions";
 import DoctorNotes from "../pages/doctor/Notes";
 import DoctorSchedule from "../pages/doctor/Schedule";
@@ -78,6 +78,10 @@ export default function AppRoutes() {
           <Route path="/dashboard/admin" element={<AdminDashboard />} />
           <Route path="/dashboard/admin/patients" element={<PatientsPage />} />
           <Route
+            path="/dashboard/admin/patients/:patientId"
+            element={<PatientDetailPage />}
+          />
+          <Route
             path="/dashboard/admin/registration"
             element={<RegistrationPage />}
           />
@@ -104,7 +108,10 @@ export default function AppRoutes() {
             path="/dashboard/doctor/consultation"
             element={<Consultation />}
           />
-          <Route path="/dashboard/doctor/diagnosis" element={<Diagnosis />} />
+          <Route
+            path="/dashboard/doctor/diagnosis"
+            element={<Navigate to="/dashboard/doctor/consultation" replace />}
+          />
           <Route
             path="/dashboard/doctor/prescriptions"
             element={<Prescriptions />}

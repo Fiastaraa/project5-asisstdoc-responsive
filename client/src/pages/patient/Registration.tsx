@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import { clinic, unwrap } from "../../services/clinicService";
-import { CheckCircle2, Clock, MapPin, User, Stethoscope, Building2, IdCard, Calendar } from "lucide-react";
+import { CheckCircle2, Clock, User, Stethoscope, Building2, IdCard, Calendar } from "lucide-react";
 import Badge from "../../components/common/Badge";
 
 const DEFAULT_POLIS = [
@@ -37,7 +37,6 @@ export default function PatientRegistration() {
   const [ticket, setTicket] = useState<any>(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -72,7 +71,6 @@ export default function PatientRegistration() {
           phone: myP.phone || "",
           address: myP.address || "",
         }));
-        setProfileLoaded(true);
       }
     });
   }, []);

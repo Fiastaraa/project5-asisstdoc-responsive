@@ -56,57 +56,77 @@ export default function PharmacistDashboard() {
         <StatCard label="Visits" value={visits.length} icon={CheckCircle2} />
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
-        <section className="ad-card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[#ece8df] p-5">
+        <section className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-white p-5">
             <div>
-              <h2 className="ad-section-title text-lg">
-                Today's Prescriptions
+              <h2 className="text-base font-extrabold text-[#1B3C53]">
+                Resep Hari Ini
               </h2>
-              <p className="text-xs text-[#7b8497]">
-                Prepare medicines and update status
+              <p className="text-xs text-slate-500 font-medium">
+                Daftar penyiapan obat dan pembaharuan status
               </p>
             </div>
-            <Link
-              to="/dashboard/pharmacist/queue"
-              className="text-xs font-black text-[#168c9b]"
-            >
-              Open queue <ArrowRight className="inline" size={14} />
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/dashboard/pharmacist/prescriptions"
+                className="text-xs font-bold text-slate-600 hover:text-[#1B3C53] transition"
+              >
+                Detail Resep
+              </Link>
+              <Link
+                to="/dashboard/pharmacist/queue"
+                className="text-xs font-bold text-[#1B3C53] flex items-center gap-1 hover:underline"
+              >
+                Buka Antrean <ArrowRight size={13} />
+              </Link>
+            </div>
           </div>
-          <div className="divide-y divide-[#eeeae2]">
-            {rx.map((r) => (
+          <div className="divide-y divide-slate-100">
+            {rx.slice(0, 8).map((r) => (
               <div
                 key={r.id}
-                className="flex items-center justify-between gap-3 p-5"
+                className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition"
               >
                 <div>
-                  <p className="font-black text-[#101a3d]">{r.medicine.name}</p>
-                  <p className="text-xs text-[#7b8497]">
-                    Qty {r.quantity} · Visit #{r.visit?.id}
+                  <p className="font-extrabold text-sm text-[#1B3C53]">{r.medicine.name}</p>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Jumlah: {r.quantity} unit · Kunjungan #{r.visit?.id}
                   </p>
                 </div>
                 <Badge tone={r.status === "READY" ? "emerald" : "amber"}>
-                  {r.status}
+                  {r.status === "READY" ? "SIAP" : "MENUNGGU"}
                 </Badge>
               </div>
             ))}
+            {rx.length === 0 && (
+              <div className="p-8 text-center text-xs text-slate-400">
+                Belum ada resep masuk hari ini.
+              </div>
+            )}
           </div>
         </section>
-        <section className="ad-card p-6">
-          <div className="rounded-2xl bg-[#101a3d] p-6 text-white">
-            <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#56c6d0]">
-              Inventory
-            </p>
-            <h2 className="mt-2 text-2xl font-black">Stock readiness</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Open Medicine Inventory to review dosage, stock and price before
-              preparing prescriptions.
-            </p>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-4 h-fit">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Pusat Inventaris & Stok
+              </p>
+              <h2 className="mt-1 text-base font-extrabold text-[#1B3C53]">Kesiapan Stok Obat</h2>
+            </div>
+            <span className="rounded-md bg-[#DCD7C9]/50 px-2.5 py-1 text-xs font-bold text-[#1B3C53] border border-[#DCD7C9]">
+              Live Audit
+            </span>
+          </div>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Periksa ketersediaan sediaan fisik, dosis, dan harga sebelum melakukan penyiapan dan peracikan resep obat pasien.
+          </p>
+          <div className="pt-2">
             <Link
               to="/dashboard/pharmacist/inventory"
-              className="ad-btn ad-btn-primary mt-5"
+              className="ad-btn ad-btn-primary w-full justify-center"
             >
-              View inventory
+              Buka Inventaris Obat
             </Link>
           </div>
         </section>

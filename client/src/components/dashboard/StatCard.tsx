@@ -13,27 +13,27 @@ export default function StatCard({
   hint?: string;
 }) {
   const tones = {
-    indigo: "bg-[#101a3d] text-white",
-    cyan: "bg-[#168c9b] text-white",
-    emerald: "bg-[#dff4e8] text-[#21704b]",
-    amber: "bg-[#f6ebc8] text-[#806a1b]",
-    rose: "bg-[#f9ded9] text-[#a13e34]",
-    violet: "bg-[#e9e3fb] text-[#5c43a6]",
+    indigo: "bg-[#1B3C53] text-white",
+    cyan: "bg-[#DCD7C9] text-[#1B3C53]",
+    emerald: "bg-emerald-50 text-emerald-800 border border-emerald-200",
+    amber: "bg-amber-50 text-amber-900 border border-amber-200",
+    rose: "bg-rose-50 text-rose-900 border border-rose-200",
+    violet: "bg-slate-100 text-[#1B3C53] border border-slate-200",
   };
   return (
-    <div className="ad-card p-5">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-slate-300">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[.12em] text-[#7b8497]">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             {label}
           </p>
-          <p className="mt-2 text-3xl font-black text-[#101a3d]">{value}</p>
-          {hint && <p className="mt-1 text-xs text-[#7b8497]">{hint}</p>}
+          <p className="mt-1.5 text-2xl font-extrabold text-[#1B3C53]">{value}</p>
+          {hint && <p className="mt-1 text-[11px] font-medium text-slate-500">{hint}</p>}
         </div>
         <div
-          className={`grid h-11 w-11 place-items-center rounded-xl ${tones[tone]}`}
+          className={`grid h-10 w-10 place-items-center rounded-lg shrink-0 ${tones[tone]}`}
         >
-          <Icon size={20} />
+          <Icon size={18} />
         </div>
       </div>
     </div>

@@ -11,12 +11,12 @@ export default function WorkspaceCard({
   action?: ReactNode;
 }) {
   return (
-    <section className="ad-card overflow-hidden">
-      <div className="flex items-center justify-between gap-4 border-b border-[#ece8df] bg-[#101a3d] p-5 text-white">
+    <section className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4">
         <div>
-          <h2 className="font-black">{title}</h2>
+          <h2 className="font-extrabold text-base text-[#1B3C53]">{title}</h2>
           {subtitle && (
-            <p className="mt-1 text-xs text-slate-300">{subtitle}</p>
+            <p className="mt-0.5 text-xs text-slate-500 font-medium">{subtitle}</p>
           )}
         </div>
         {action}

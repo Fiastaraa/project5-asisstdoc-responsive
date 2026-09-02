@@ -68,6 +68,7 @@ export const JsonNull = runtime.JsonNull;
 export const AnyNull = runtime.AnyNull;
 export const ModelName = {
     User: 'User',
+    Poli: 'Poli',
     Patient: 'Patient',
     Doctor: 'Doctor',
     Visit: 'Visit',
@@ -75,7 +76,8 @@ export const ModelName = {
     Medicine: 'Medicine',
     Prescription: 'Prescription',
     Invoice: 'Invoice',
-    Payment: 'Payment'
+    Payment: 'Payment',
+    Reminder: 'Reminder'
 };
 /**
  * Enums
@@ -95,9 +97,18 @@ export const UserScalarFieldEnum = {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
+export const PoliScalarFieldEnum = {
+    id: 'id',
+    name: 'name',
+    code: 'code',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
 export const PatientScalarFieldEnum = {
     id: 'id',
     name: 'name',
+    nik: 'nik',
+    birthDate: 'birthDate',
     gender: 'gender',
     age: 'age',
     phone: 'phone',
@@ -110,6 +121,7 @@ export const DoctorScalarFieldEnum = {
     id: 'id',
     name: 'name',
     specialization: 'specialization',
+    poliId: 'poliId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     userId: 'userId'
@@ -118,6 +130,9 @@ export const VisitScalarFieldEnum = {
     id: 'id',
     patientId: 'patientId',
     doctorId: 'doctorId',
+    poliId: 'poliId',
+    queueNumber: 'queueNumber',
+    estimatedWaitMinutes: 'estimatedWaitMinutes',
     visitDate: 'visitDate',
     status: 'status',
     complaint: 'complaint',
@@ -173,6 +188,17 @@ export const PaymentScalarFieldEnum = {
     method: 'method',
     paidDate: 'paidDate',
     createdAt: 'createdAt'
+};
+export const ReminderScalarFieldEnum = {
+    id: 'id',
+    patientId: 'patientId',
+    type: 'type',
+    title: 'title',
+    date: 'date',
+    notes: 'notes',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
 };
 export const SortOrder = {
     asc: 'asc',

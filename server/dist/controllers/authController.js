@@ -1,30 +1,14 @@
 import { z } from "zod";
 import { loginUser, registerUser, getCurrentUser, } from "../services/authService.js";
 const registerSchema = z.object({
-    name: z
-        .string()
-        .min(2, "Name must be at least 2 characters"),
-    email: z
-        .string()
-        .email("Invalid email"),
-    password: z
-        .string()
-        .min(8, "Password must be at least 8 characters"),
-    role: z.enum([
-        "ADMIN",
-        "DOCTOR",
-        "NURSE",
-        "PHARMACIST",
-        "PATIENT",
-    ]),
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    role: z.enum(["ADMIN", "DOCTOR", "NURSE", "PHARMACIST", "PATIENT"]),
 });
 const loginSchema = z.object({
-    email: z
-        .string()
-        .email("Invalid email"),
-    password: z
-        .string()
-        .min(1, "Password is required"),
+    email: z.string().email("Invalid email"),
+    password: z.string().min(1, "Password is required"),
 });
 export async function register(req, res) {
     try {
@@ -44,9 +28,7 @@ export async function register(req, res) {
                 errors: error.issues,
             });
         }
-        const message = error instanceof Error
-            ? error.message
-            : "Failed to register user";
+        const message = error instanceof Error ? error.message : "Failed to register user";
         if (message === "Email already registered") {
             return res.status(409).json({
                 success: false,
@@ -78,9 +60,7 @@ export async function login(req, res) {
                 errors: error.issues,
             });
         }
-        const message = error instanceof Error
-            ? error.message
-            : "Failed to login";
+        const message = error instanceof Error ? error.message : "Failed to login";
         if (message === "Invalid email or password") {
             return res.status(401).json({
                 success: false,

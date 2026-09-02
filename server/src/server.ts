@@ -14,6 +14,7 @@ import clinicRoutes from "./routes/clinicRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import poliRoutes from "./routes/poliRoutes.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173" }));
 app.use(express.json());
@@ -42,6 +43,8 @@ app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/invoices", clinicRoutes);
 app.use("/api/polis", poliRoutes);
 app.use("/api/reminders", reminderRoutes);
+app.use("/api/payments", paymentRoutes);
+
 app.use((_req, res) =>
   res.status(404).json({ success: false, message: "Endpoint not found" }),
 );

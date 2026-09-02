@@ -83,44 +83,44 @@ export default function AdminDashboard() {
         <StatCard label="Paid" value={d.paid} icon={Receipt} tone="violet" />
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.55fr_.9fr]">
-        <section className="ad-card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[#ece8df] p-5">
+        <section className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between border-b border-slate-200 p-5 bg-white">
             <div>
-              <h2 className="ad-section-title text-lg">Today's Queue</h2>
-              <p className="text-xs text-[#7b8497]">
-                Patient status across the outpatient flow
+              <h2 className="text-base font-extrabold text-[#1B3C53]">Antrean Pasien Hari Ini</h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Status alur pelayanan rawat jalan poliklinik
               </p>
             </div>
             <Link
               to="/dashboard/admin/queue"
-              className="text-xs font-black text-[#168c9b]"
+              className="text-xs font-bold text-[#1B3C53] hover:underline flex items-center gap-1"
             >
-              View full queue <ArrowRight className="inline" size={14} />
+              Lihat antrean lengkap <ArrowRight size={13} />
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-[#f7f5ef] text-[10px] uppercase tracking-wider text-[#7b8497]">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-100">
                 <tr>
-                  <th className="px-5 py-3">Patient</th>
-                  <th>Time</th>
-                  <th>Doctor</th>
+                  <th className="px-5 py-3">Pasien</th>
+                  <th>Waktu</th>
+                  <th>Dokter</th>
                   <th>Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {(d.queue || []).map((v: any) => (
-                  <tr key={v.id} className="border-t border-[#eeeae2]">
-                    <td className="px-5 py-4 font-black text-[#101a3d]">
+                  <tr key={v.id} className="hover:bg-slate-50/60 transition">
+                    <td className="px-5 py-3.5 font-bold text-[#1B3C53]">
                       {v.patient?.name}
                     </td>
-                    <td>
+                    <td className="text-slate-500 font-medium">
                       {new Date(v.visitDate).toLocaleTimeString("id-ID", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </td>
-                    <td>{v.doctor?.name}</td>
+                    <td className="text-slate-700 font-medium">{v.doctor?.name}</td>
                     <td>
                       <Badge
                         tone={
@@ -136,53 +136,75 @@ export default function AdminDashboard() {
                     </td>
                   </tr>
                 ))}
+                {(!d.queue || d.queue.length === 0) && (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-xs text-slate-400">
+                      Belum ada kunjungan tercatat hari ini.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </section>
+
         <section className="space-y-5">
-          <div className="ad-card bg-[#101a3d] p-6 text-white">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#168c9b]">
-                <WalletCards size={19} />
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#1B3C53] text-white">
+                  <WalletCards size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Ringkasan Keuangan
+                  </p>
+                  <h2 className="text-base font-extrabold text-[#1B3C53]">Pendapatan Hari Ini</h2>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400">
-                  Revenue Summary
-                </p>
-                <h2 className="text-lg font-black">Today's Revenue</h2>
-              </div>
+              <span className="rounded-md bg-[#DCD7C9]/40 px-2 py-0.5 text-xs font-bold text-[#1B3C53] border border-[#DCD7C9]">
+                Live
+              </span>
             </div>
-            <p className="mt-7 text-3xl font-black">{money(d.todayRevenue)}</p>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-white/8 p-3">
-                <p className="text-[10px] text-slate-400">Unpaid invoices</p>
-                <b className="text-xl">{d.unpaidInvoices}</b>
+
+            <div>
+              <p className="text-3xl font-black text-[#1B3C53]">{money(d.todayRevenue)}</p>
+              <p className="text-xs text-slate-400 mt-1">Total pembayaran berhasil divalidasi kasir</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                <p className="text-[11px] font-semibold text-slate-500">Tagihan Belum Lunas</p>
+                <b className="text-xl font-extrabold text-[#1B3C53]">{d.unpaidInvoices}</b>
               </div>
-              <div className="rounded-xl bg-white/8 p-3">
-                <p className="text-[10px] text-slate-400">Completed visits</p>
-                <b className="text-xl">{d.completed}</b>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                <p className="text-[11px] font-semibold text-slate-500">Selesai Berobat</p>
+                <b className="text-xl font-extrabold text-emerald-700">{d.completed}</b>
               </div>
             </div>
           </div>
-          <div className="ad-card p-5">
-            <h3 className="ad-section-title">Daily Visits</h3>
-            <div className="mt-5 flex h-32 items-end gap-2">
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+              <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Aktivitas Kunjungan</h3>
+              <span className="text-xs text-slate-400 font-medium">Jam Operasional</span>
+            </div>
+            <div className="mt-4 flex h-28 items-end gap-2">
               {[35, 52, 44, 62, 58, 78, 68, 84, 72, 92].map((h, i) => (
                 <div
                   key={i}
-                  className="flex-1 rounded-t bg-[#168c9b]/80"
+                  className="flex-1 rounded-t bg-[#1B3C53] hover:opacity-80 transition"
                   style={{ height: `${h}%` }}
                 />
               ))}
             </div>
-            <div className="mt-2 flex justify-between text-[10px] text-[#8b92a2]">
-              <span>08</span>
-              <span>10</span>
-              <span>12</span>
-              <span>14</span>
-              <span>16</span>
-              <span>18</span>
+            <div className="mt-2 flex justify-between text-[10px] text-slate-400 font-mono">
+              <span>08:00</span>
+              <span>10:00</span>
+              <span>12:00</span>
+              <span>14:00</span>
+              <span>16:00</span>
+              <span>18:00</span>
             </div>
           </div>
         </section>

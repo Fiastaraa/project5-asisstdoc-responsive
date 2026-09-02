@@ -55,35 +55,35 @@ export default function DoctorDashboard() {
         <StatCard label="Today's Patients" value={rows.length} icon={Users} />
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
-        <section className="ad-card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[#ece8df] p-5">
+        <section className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-white p-5">
             <div>
-              <h2 className="ad-section-title text-lg">My Schedule</h2>
-              <p className="text-xs text-[#7b8497]">
-                Patients assigned to your queue
+              <h2 className="text-base font-extrabold text-[#1B3C53]">Jadwal & Antrean Saya</h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Daftar pasien dalam antrean konsultasi hari ini
               </p>
             </div>
             <Link
               to="/dashboard/doctor/queue"
-              className="text-xs font-black text-[#168c9b]"
+              className="text-xs font-bold text-[#1B3C53] flex items-center gap-1 hover:underline"
             >
-              Open queue <ArrowRight className="inline" size={14} />
+              Buka antrean <ArrowRight size={13} />
             </Link>
           </div>
-          <div className="divide-y divide-[#eeeae2]">
+          <div className="divide-y divide-slate-100">
             {rows.map((v) => (
               <div
                 key={v.id}
-                className="flex items-center justify-between gap-4 p-5"
+                className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-slate-50/60 transition"
               >
                 <div>
-                  <p className="font-black text-[#101a3d]">{v.patient.name}</p>
-                  <p className="mt-1 text-xs text-[#7b8497]">
+                  <p className="font-extrabold text-sm text-[#1B3C53]">{v.patient.name}</p>
+                  <p className="mt-0.5 text-[11px] text-slate-500 font-medium">
                     {new Date(v.visitDate).toLocaleTimeString("id-ID", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}{" "}
-                    · {v.patient.age} years · {v.patient.gender}
+                    · {v.patient.age} tahun · {v.patient.gender}
                   </p>
                 </div>
                 <Badge
@@ -99,23 +99,35 @@ export default function DoctorDashboard() {
                 </Badge>
               </div>
             ))}
+            {rows.length === 0 && (
+              <div className="p-8 text-center text-xs text-slate-400">
+                Tidak ada pasien dalam antrean saat ini.
+              </div>
+            )}
           </div>
         </section>
-        <section className="ad-card p-6">
-          <div className="rounded-2xl bg-[#101a3d] p-6 text-white">
-            <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#56c6d0]">
-              Clinical workspace
-            </p>
-            <h2 className="mt-2 text-2xl font-black">Consultation ready</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              Review medical history, record diagnosis and send prescriptions
-              from one flow.
-            </p>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-4 h-fit">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Ruang Konsultasi Dokter
+              </p>
+              <h2 className="mt-1 text-base font-extrabold text-[#1B3C53]">Kesiapan Pasien</h2>
+            </div>
+            <span className="rounded-md bg-[#DCD7C9]/50 px-2.5 py-1 text-xs font-bold text-[#1B3C53] border border-[#DCD7C9]">
+              EMR Ready
+            </span>
+          </div>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Periksa rekam medis, anamnesis, input diagnosa ICD-10, dan terbitkan resep digital dalam satu lembar kerja terintegrasi.
+          </p>
+          <div className="pt-2">
             <Link
               to="/dashboard/doctor/consultation"
-              className="ad-btn ad-btn-primary mt-5"
+              className="ad-btn ad-btn-primary w-full justify-center"
             >
-              Open consultation
+              Mulai Konsultasi Pasien
             </Link>
           </div>
         </section>

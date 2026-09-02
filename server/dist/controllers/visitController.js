@@ -3,15 +3,11 @@ import { prisma } from "../lib/prisma.js";
 const createVisitSchema = z.object({
     patientId: z.coerce.number().int().positive(),
     doctorId: z.coerce.number().int().positive(),
+    poliId: z.coerce.number().int().positive().optional(),
     complaint: z.string().optional(),
 });
 const statusSchema = z.object({
-    status: z.enum([
-        "WAITING",
-        "IN_CONSULTATION",
-        "COMPLETED",
-        "PAID",
-    ]),
+    status: z.enum(["WAITING", "CALLED", "IN_CONSULTATION", "COMPLETED", "PAID"]),
 });
 export async function getVisits(req, res) {
     try {
@@ -44,6 +40,7 @@ export async function getVisits(req, res) {
             include: {
                 patient: true,
                 doctor: true,
+                poli: true,
                 diagnoses: true,
                 prescriptions: {
                     include: {
@@ -76,6 +73,7 @@ export async function getVisitById(req, res) {
             include: {
                 patient: true,
                 doctor: true,
+                poli: true,
                 diagnoses: true,
                 prescriptions: {
                     include: {
@@ -97,13 +95,19 @@ export async function getVisitById(req, res) {
         }
         const auth = req.user;
         if (auth?.role === "PATIENT") {
-            const owner = await prisma.patient.findUnique({ where: { id: visit.patientId }, select: { userId: true } });
-            if (owner?.userId !== auth.userId)
+            const owner = await prisma.patient.findUnique({
+                where: { id: visit.patientId },
+                select: { userId: true },
+            });
+            if (owner?.userId && owner.userId !== auth.userId)
                 return res.status(403).json({ success: false, message: "Forbidden" });
         }
         if (auth?.role === "DOCTOR") {
-            const doctor = await prisma.doctor.findUnique({ where: { id: visit.doctorId }, select: { userId: true } });
-            if (doctor?.userId !== auth.userId)
+            const doctor = await prisma.doctor.findUnique({
+                where: { id: visit.doctorId },
+                select: { userId: true },
+            });
+            if (doctor?.userId && doctor.userId !== auth.userId)
                 return res.status(403).json({ success: false, message: "Forbidden" });
         }
         return res.json({
@@ -132,6 +136,7 @@ export async function createVisit(req, res) {
                 where: {
                     id: data.doctorId,
                 },
+                include: { poli: true },
             }),
         ]);
         if (!patient) {
@@ -146,16 +151,31 @@ export async function createVisit(req, res) {
                 message: "Doctor not found",
             });
         }
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const end = new Date();
+        end.setHours(23, 59, 59, 999);
+        const todayCount = await prisma.visit.count({
+            where: { visitDate: { gte: start, lte: end } },
+        });
+        const poliCode = doctor.poli?.code || "A";
+        const queueNumber = `${poliCode}${String(todayCount + 1).padStart(3, "0")}`;
+        const estimatedWaitMinutes = (todayCount + 1) * 15;
+        const poliId = data.poliId || doctor.poliId || undefined;
         const visit = await prisma.visit.create({
             data: {
                 patientId: data.patientId,
                 doctorId: data.doctorId,
+                poliId,
+                queueNumber,
+                estimatedWaitMinutes,
                 complaint: data.complaint,
                 status: "WAITING",
             },
             include: {
                 patient: true,
                 doctor: true,
+                poli: true,
             },
         });
         return res.status(201).json({
@@ -193,7 +213,8 @@ export async function updateVisitStatus(req, res) {
                 message: "Visit not found",
             });
         }
-        if (auth?.role === "DOCTOR" && (visit.status !== "IN_CONSULTATION" || status !== "COMPLETED")) {
+        if (auth?.role === "DOCTOR" &&
+            (visit.status !== "IN_CONSULTATION" || status !== "COMPLETED")) {
             return res.status(409).json({
                 success: false,
                 message: "Doctor can only complete a visit that is ready for consultation.",
@@ -208,7 +229,10 @@ export async function updateVisitStatus(req, res) {
         if (status === "COMPLETED") {
             const fullVisit = await prisma.visit.findUnique({
                 where: { id },
-                include: { prescriptions: { include: { medicine: true } }, invoice: true },
+                include: {
+                    prescriptions: { include: { medicine: true } },
+                    invoice: true,
+                },
             });
             const pending = fullVisit?.prescriptions.some((item) => item.status === "PENDING");
             if (fullVisit && !pending && !fullVisit.invoice) {
@@ -219,7 +243,16 @@ export async function updateVisitStatus(req, res) {
                 const subtotal = consultationFee + adminFee + medicineTotal;
                 const tax = subtotal * taxRate;
                 invoice = await prisma.invoice.create({
-                    data: { visitId: id, consultationFee, medicineTotal, adminFee, tax, subtotal, total: subtotal + tax, status: "UNPAID" },
+                    data: {
+                        visitId: id,
+                        consultationFee,
+                        medicineTotal,
+                        adminFee,
+                        tax,
+                        subtotal,
+                        total: subtotal + tax,
+                        status: "UNPAID",
+                    },
                 });
             }
         }

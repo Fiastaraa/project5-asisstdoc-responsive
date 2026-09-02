@@ -121,8 +121,27 @@ export default function InvoicesPage() {
   }
 
   const invoices = rows
-    .map((row) => row.invoice)
-    .filter((invoice): invoice is Invoice => Boolean(invoice));
+    .filter((row: any) => Boolean(row.invoice))
+    .map((row: any) => {
+      const inv = row.invoice;
+      const items = (row.prescriptions || []).map((p: any) => ({
+        name: p.medicine?.name || "Obat",
+        quantity: p.quantity,
+        price: Number(p.medicine?.price || 0),
+      }));
+
+      return {
+        ...inv,
+        patient: row.patient,
+        patientName: row.patient?.name || "-",
+        doctor: row.doctor,
+        doctorName: row.doctor?.name || "-",
+        visit: row,
+        visitDate: row.visitDate,
+        items,
+        prescriptions: row.prescriptions,
+      } as Invoice;
+    });
 
   return (
     <>

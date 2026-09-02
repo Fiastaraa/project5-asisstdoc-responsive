@@ -19,7 +19,11 @@ router.get(
   getVisits,
 );
 
-router.patch("/:id/vitals", authorizeRoles("NURSE"), updateVitals);
+router.patch(
+  "/:id/vitals",
+  authorizeRoles("NURSE", "ADMIN", "DOCTOR"),
+  updateVitals,
+);
 
 router.get(
   "/:id",
@@ -35,7 +39,7 @@ router.post(
 
 router.patch(
   "/:id/status",
-  authorizeRoles("ADMIN", "DOCTOR"),
+  authorizeRoles("ADMIN", "DOCTOR", "NURSE"),
   updateVisitStatus,
 );
 

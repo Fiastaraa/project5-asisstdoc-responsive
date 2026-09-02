@@ -23,6 +23,18 @@ export async function registerUser(input) {
             role: input.role,
         },
     });
+    if (input.role === "PATIENT") {
+        await prisma.patient.create({
+            data: {
+                name: input.name,
+                gender: "Female",
+                age: 25,
+                phone: "0812" + Math.floor(10000000 + Math.random() * 90000000),
+                address: "Alamat Pasien Baru",
+                userId: user.id,
+            },
+        });
+    }
     return {
         id: user.id,
         name: user.name,

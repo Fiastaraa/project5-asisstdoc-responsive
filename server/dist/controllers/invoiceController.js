@@ -37,12 +37,8 @@ export async function createInvoice(req, res) {
                 data: visit.invoice,
             });
         }
-        const medicineTotal = visit.prescriptions.reduce((total, item) => total +
-            Number(item.medicine.price) *
-                item.quantity, 0);
-        const subtotal = consultationFee +
-            medicineTotal +
-            adminFee;
+        const medicineTotal = visit.prescriptions.reduce((total, item) => total + Number(item.medicine.price) * item.quantity, 0);
+        const subtotal = consultationFee + medicineTotal + adminFee;
         const tax = subtotal * taxRate;
         const total = subtotal + tax;
         const invoice = await prisma.invoice.create({
